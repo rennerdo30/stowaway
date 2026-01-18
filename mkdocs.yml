@@ -1,0 +1,157 @@
+# MkDocs Configuration - Stowaway Documentation
+# Based on Luminous Void theme
+
+site_name: Stowaway
+site_url: https://rennerdo30.github.io/stowaway
+site_description: Modern inventory management system - stow away your items safely
+site_author: rennerdo30
+
+# Repository
+repo_name: rennerdo30/stowaway
+repo_url: https://github.com/rennerdo30/stowaway
+edit_uri: edit/master/docs/
+
+# Theme Configuration
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+
+  # Color palette with toggle (dark mode default)
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+  # Font configuration
+  font:
+    text: Inter
+    code: Fira Code
+
+  # Features
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - header.autohide
+
+  # Icons
+  icon:
+    logo: material/package-variant-closed
+    repo: fontawesome/brands/github
+
+  # Favicon
+  favicon: assets/images/favicon.png
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - minify:
+      minify_html: true
+
+# Extensions
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  # PyMdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Extra CSS and JavaScript
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - assets/javascripts/extra.js
+
+# Extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rennerdo30
+
+  generator: false
+
+# Navigation
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Configuration: getting-started/configuration.md
+  - Guide:
+    - Overview: guide/overview.md
+    - Features: guide/features.md
+    - Managing Items: guide/items.md
+  - API Reference:
+    - Introduction: api/index.md
+    - Authentication: api/authentication.md
+    - Items: api/items.md
+    - Categories: api/categories.md
+    - Locations: api/locations.md
+  - About:
+    - Changelog: about/changelog.md
+    - Contributing: about/contributing.md
+    - License: about/license.md
+
+# Copyright
+copyright: Copyright &copy; 2024 Stowaway Contributors

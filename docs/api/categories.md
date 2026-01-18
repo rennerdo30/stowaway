@@ -1,0 +1,151 @@
+# Categories API
+
+Manage item categories.
+
+## List Categories
+
+Get all categories with item counts.
+
+### Endpoint
+
+```
+GET /api/categories
+```
+
+### Response
+
+```json
+{
+  "categories": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Electronics",
+      "color": "#3b82f6",
+      "_count": {
+        "items": 15
+      }
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "name": "Tools",
+      "color": "#22c55e",
+      "_count": {
+        "items": 8
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Create Category
+
+Add a new category.
+
+### Endpoint
+
+```
+POST /api/categories
+```
+
+### Request Body
+
+```json
+{
+  "name": "Electronics",
+  "color": "#3b82f6"
+}
+```
+
+### Fields
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Category name (unique) |
+| `color` | string | No | `#6366f1` | Hex color code |
+
+### Response
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Electronics",
+  "color": "#3b82f6"
+}
+```
+
+### Errors
+
+| Code | Message |
+|------|---------|
+| 400 | Category already exists |
+| 400 | Invalid color format |
+
+---
+
+## Update Category
+
+Modify an existing category.
+
+### Endpoint
+
+```
+PUT /api/categories/[id]
+```
+
+### Request Body
+
+```json
+{
+  "name": "Consumer Electronics",
+  "color": "#2563eb"
+}
+```
+
+### Response
+
+Returns the updated category.
+
+---
+
+## Delete Category
+
+Remove a category.
+
+### Endpoint
+
+```
+DELETE /api/categories/[id]
+```
+
+### Response
+
+```json
+{
+  "success": true
+}
+```
+
+!!! note "Items Not Deleted"
+    Deleting a category does not delete its items. Items will become uncategorized.
+
+---
+
+## Color Format
+
+Colors must be valid hex color codes:
+
+- 6-digit: `#3b82f6`
+- 3-digit: `#38f` (expanded to `#3388ff`)
+
+### Suggested Colors
+
+| Color | Hex | Use Case |
+|-------|-----|----------|
+| Blue | `#3b82f6` | Electronics, Technology |
+| Green | `#22c55e` | Tools, Outdoor |
+| Purple | `#a855f7` | Media, Entertainment |
+| Orange | `#f97316` | Kitchen, Home |
+| Red | `#ef4444` | Important, Priority |
+| Indigo | `#6366f1` | Default |

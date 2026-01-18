@@ -1,0 +1,79 @@
+# Changelog
+
+All notable changes to Stowaway will be documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2024-01-19
+
+### Added
+
+- **Item Management**
+  - Create, read, update, delete items
+  - Item fields: name, description, manufacturer, barcode, price, date, quantity
+  - Multiple image uploads per item
+  - Low stock alerts based on minimum quantity threshold
+
+- **Categories**
+  - Color-coded categories for organizing items
+  - Item count display per category
+
+- **Locations**
+  - Track physical storage locations
+  - Optional descriptions for locations
+  - Item count display per location
+
+- **QR Codes & Barcode Scanning**
+  - Generate QR codes for any item
+  - Camera-based barcode scanning using ZXing
+
+- **Data Management**
+  - Export to JSON and CSV formats
+  - Import from JSON and CSV files
+  - Full backup and restore capability
+
+- **User Interface**
+  - Responsive design for desktop and mobile
+  - Dark and light theme support
+  - Modern UI built with shadcn/ui components
+
+- **Authentication**
+  - User registration and login
+  - Session management with NextAuth.js
+  - Admin and User roles
+  - First user automatically becomes admin
+
+- **Dashboard**
+  - Total items and inventory value
+  - Category and location counts
+  - Low stock alerts
+  - Recent items list
+
+### Technical
+
+- Built with Next.js 14+ App Router
+- SQLite database with Prisma ORM
+- Tailwind CSS styling
+- TypeScript throughout
+- Docker support for easy deployment
+
+---
+
+## Roadmap
+
+### Planned Features
+
+- [ ] Multi-user collaboration
+- [ ] Inventory history and audit log
+- [ ] Scheduled reports
+- [ ] Mobile app
+- [ ] Webhook integrations
+- [ ] Advanced search filters
+- [ ] Batch operations
+
+---
+
+## Previous Versions
+
+This is a complete rewrite of the original Java/JavaFX desktop application. The web version includes all original functionality plus many new features.

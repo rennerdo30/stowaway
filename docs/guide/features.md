@@ -1,0 +1,229 @@
+# Features
+
+A comprehensive guide to all Stowaway features.
+
+## Item Management
+
+### Creating Items
+
+Items can include the following information:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| Name | Text | Yes | Item name/title |
+| Description | Text | No | Detailed description |
+| Manufacturer | Text | No | Brand or maker |
+| Barcode | Text | No | UPC, EAN, or custom code |
+| Price | Number | No | Purchase price |
+| Buy Date | Date | No | When purchased |
+| Quantity | Number | No | How many (default: 1) |
+| Min Quantity | Number | No | Low stock threshold |
+| Category | Select | No | Organizational category |
+| Location | Select | No | Storage location |
+
+### Editing Items
+
+1. Navigate to the item detail page
+2. Click **Edit**
+3. Modify any fields
+4. Click **Save**
+
+### Deleting Items
+
+!!! warning "Permanent Action"
+    Deleting an item is permanent and cannot be undone.
+
+1. Navigate to the item detail page
+2. Click **Delete**
+3. Confirm the deletion
+
+---
+
+## Categories
+
+### Color Coding
+
+Each category has a color that appears as a badge on items:
+
+- Helps visually identify item types at a glance
+- Colors are customizable
+- Choose from a preset palette or enter custom hex colors
+
+### Managing Categories
+
+- **Create** - Add new categories with name and color
+- **Edit** - Change category name or color
+- **Delete** - Remove category (items will be uncategorized)
+
+---
+
+## Locations
+
+### Organizing by Location
+
+Locations help you find items physically:
+
+- Create hierarchical locations (e.g., "Garage > Shelf A")
+- Add descriptions for additional context
+- View all items in a location
+
+### Location Details
+
+| Field | Description |
+|-------|-------------|
+| Name | Location identifier (unique) |
+| Description | Additional details about the location |
+
+---
+
+## QR Codes
+
+### Generating QR Codes
+
+Each item can have a QR code generated:
+
+1. Open item detail page
+2. Click **QR Code** button
+3. View, download, or print the QR code
+
+### Using QR Codes
+
+- Print and attach to physical items or shelves
+- Scan with any QR code reader
+- Links directly to the item detail page
+
+---
+
+## Barcode Scanning
+
+### Camera Scanning
+
+Use your device's camera to scan barcodes:
+
+1. Click **Scan** button on the items page
+2. Allow camera access
+3. Point camera at barcode
+4. System automatically detects and searches
+
+### Supported Formats
+
+- UPC-A
+- UPC-E
+- EAN-8
+- EAN-13
+- Code 39
+- Code 128
+- QR Code
+
+---
+
+## Image Uploads
+
+### Adding Images
+
+Items can have multiple images:
+
+1. Edit an item
+2. Click **Add Image** or drag & drop
+3. Images are uploaded automatically
+
+### Supported Formats
+
+- JPEG (`.jpg`, `.jpeg`)
+- PNG (`.png`)
+- GIF (`.gif`)
+- WebP (`.webp`)
+
+### File Size
+
+Default maximum: 5MB per image (configurable)
+
+---
+
+## Low Stock Alerts
+
+### Setting Up Alerts
+
+1. Set **Min Quantity** on an item
+2. When quantity drops to or below this value, it appears in alerts
+
+### Viewing Alerts
+
+- Dashboard shows low stock items count
+- Click to see all low stock items
+- Filter items list by low stock status
+
+---
+
+## Export & Import
+
+### Exporting Data
+
+Export your inventory for backup or analysis:
+
+=== "JSON"
+    - Complete data with relationships
+    - Best for backups
+    - Can be re-imported
+
+=== "CSV"
+    - Spreadsheet compatible
+    - Good for analysis
+    - Easy to open in Excel/Sheets
+
+### Importing Data
+
+Restore from a previous export:
+
+1. Go to **Settings**
+2. Click **Import**
+3. Select your JSON or CSV file
+4. Review import summary
+5. Confirm import
+
+---
+
+## Theme Support
+
+### Dark Mode
+
+- Default theme
+- Easy on the eyes
+- Perfect for low-light environments
+
+### Light Mode
+
+- Bright, clean appearance
+- Better for bright environments
+- Toggle in settings or navigation
+
+---
+
+## Search & Filter
+
+### Search
+
+Search across all item fields:
+
+- Name
+- Description
+- Manufacturer
+- Barcode
+
+### Filters
+
+Narrow down results:
+
+- By category
+- By location
+- Low stock only
+
+### Sorting
+
+Sort items by:
+
+- Name
+- Price
+- Quantity
+- Date added
+- Date modified

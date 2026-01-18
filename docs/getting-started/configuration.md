@@ -1,0 +1,151 @@
+# Configuration
+
+Stowaway is configured through environment variables. This guide covers all available options.
+
+## Environment Variables
+
+### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | SQLite database file path | `file:./dev.db` |
+| `AUTH_SECRET` | Secret key for session encryption | `openssl rand -base64 32` |
+
+### Optional Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AUTH_URL` | `http://localhost:3000` | Application URL (for OAuth callbacks) |
+| `UPLOAD_DIR` | `./uploads` | Directory for image uploads |
+| `MAX_FILE_SIZE` | `5242880` | Maximum upload size in bytes (5MB) |
+
+---
+
+## Example Configuration
+
+### Development
+
+```env title=".env"
+DATABASE_URL="file:./dev.db"
+AUTH_SECRET="development-secret-change-in-production"
+AUTH_URL="http://localhost:3000"
+UPLOAD_DIR="./uploads"
+MAX_FILE_SIZE=5242880
+```
+
+### Production
+
+```env title=".env"
+DATABASE_URL="file:/app/data/stowaway.db"
+AUTH_SECRET="your-very-long-secure-random-string-here"
+AUTH_URL="https://inventory.yourdomain.com"
+UPLOAD_DIR="/app/uploads"
+MAX_FILE_SIZE=10485760
+```
+
+---
+
+## Docker Configuration
+
+When running with Docker Compose, environment variables can be set in `docker-compose.yml`:
+
+```yaml title="docker-compose.yml"
+services:
+  stowaway:
+    environment:
+      - DATABASE_URL=file:/app/data/stowaway.db
+      - AUTH_SECRET=${AUTH_SECRET:-change-this-secret}
+      - AUTH_URL=${AUTH_URL:-http://localhost:3000}
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=5242880
+```
+
+Or create a `.env` file that Docker Compose will automatically load:
+
+```env title=".env"
+AUTH_SECRET=your-production-secret-here
+AUTH_URL=https://inventory.yourdomain.com
+```
+
+---
+
+## Security Recommendations
+
+!!! danger "Production Security"
+    Always use a strong, unique `AUTH_SECRET` in production. Never use the default value.
+
+### Generating a Secure Secret
+
+=== "OpenSSL"
+    ```bash
+    openssl rand -base64 32
+    ```
+
+=== "Node.js"
+    ```bash
+    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+    ```
+
+=== "Python"
+    ```bash
+    python -c "import secrets; print(secrets.token_urlsafe(32))"
+    ```
+
+---
+
+## File Upload Settings
+
+### Supported File Types
+
+Stowaway accepts the following image formats:
+
+- JPEG (`.jpg`, `.jpeg`)
+- PNG (`.png`)
+- GIF (`.gif`)
+- WebP (`.webp`)
+
+### Changing Upload Limits
+
+To allow larger files, increase `MAX_FILE_SIZE`:
+
+```env
+# 10MB limit
+MAX_FILE_SIZE=10485760
+
+# 20MB limit
+MAX_FILE_SIZE=20971520
+```
+
+---
+
+## Database
+
+### Default Location
+
+By default, SQLite stores data in `./dev.db` in the project root.
+
+### Custom Database Location
+
+```env
+# Absolute path
+DATABASE_URL="file:/var/data/stowaway/inventory.db"
+
+# Relative path
+DATABASE_URL="file:./data/inventory.db"
+```
+
+### Backing Up the Database
+
+Simply copy the database file to create a backup:
+
+```bash
+cp dev.db backups/stowaway-$(date +%Y%m%d).db
+```
+
+---
+
+## Theme Settings
+
+Stowaway supports light and dark themes. Users can toggle between themes in the application settings.
+
+The theme preference is stored in the browser and persists across sessions.

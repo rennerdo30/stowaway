@@ -1,0 +1,149 @@
+# Locations API
+
+Manage storage locations.
+
+## List Locations
+
+Get all locations with item counts.
+
+### Endpoint
+
+```
+GET /api/locations
+```
+
+### Response
+
+```json
+{
+  "locations": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Office",
+      "description": "Main office area",
+      "_count": {
+        "items": 12
+      }
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "name": "Garage",
+      "description": "Storage area in garage",
+      "_count": {
+        "items": 25
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Create Location
+
+Add a new location.
+
+### Endpoint
+
+```
+POST /api/locations
+```
+
+### Request Body
+
+```json
+{
+  "name": "Garage Shelf A",
+  "description": "Top shelf in the garage"
+}
+```
+
+### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Location name (unique) |
+| `description` | string | No | Additional details |
+
+### Response
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Garage Shelf A",
+  "description": "Top shelf in the garage"
+}
+```
+
+### Errors
+
+| Code | Message |
+|------|---------|
+| 400 | Location already exists |
+
+---
+
+## Update Location
+
+Modify an existing location.
+
+### Endpoint
+
+```
+PUT /api/locations/[id]
+```
+
+### Request Body
+
+```json
+{
+  "name": "Garage - Shelf A",
+  "description": "Updated description"
+}
+```
+
+### Response
+
+Returns the updated location.
+
+---
+
+## Delete Location
+
+Remove a location.
+
+### Endpoint
+
+```
+DELETE /api/locations/[id]
+```
+
+### Response
+
+```json
+{
+  "success": true
+}
+```
+
+!!! note "Items Not Deleted"
+    Deleting a location does not delete its items. Items will have no assigned location.
+
+---
+
+## Location Naming Conventions
+
+Consider using hierarchical naming for complex storage:
+
+```
+Building > Room > Area > Specific Location
+```
+
+### Examples
+
+| Name | Description |
+|------|-------------|
+| `Home > Garage > Shelf A` | Specific shelf |
+| `Office > Desk > Drawer 1` | Office desk drawer |
+| `Storage Unit 42` | External storage |
+| `Bedroom Closet` | Simple location |

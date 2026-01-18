@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String   // Hashed with bcrypt
+  role      Role     @default(USER)
+  items     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Item {
+  id           String      @id @default(uuid())
+  name         String
+  description  String?
+  manufacturer String?
+  barcode      String?     @unique // EAN/UPC barcode
+  buyPrice     Float       @default(0)
+  buyDate      DateTime    @default(now())
+  quantity     Int         @default(1)
+  minQuantity  Int         @default(0) // Low stock alert threshold
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  locationId   String?
+  location     Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images       ItemImage[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([locationId])
+  @@index([userId])
+}
+
+model ItemImage {
+  id        String   @id @default(uuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  filename  String
+  path      String
+  createdAt DateTime @default(now())
+
+  @@index([itemId])
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  color String @default("#6366f1") // For UI badges (indigo-500)
+  items Item[]
+}
+
+model Location {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  items       Item[]
+}

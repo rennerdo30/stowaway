@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  stowaway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/stowaway.db
+      - AUTH_SECRET=${AUTH_SECRET:-change-this-secret-in-production}
+      - AUTH_URL=${AUTH_URL:-http://localhost:3000}
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=5242880
+    volumes:
+      - stowaway-data:/app/data
+      - stowaway-uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  stowaway-data:
+  stowaway-uploads:

@@ -1,0 +1,122 @@
+# Quick Start
+
+This guide will help you get started with Stowaway after installation.
+
+## First Launch
+
+When you first access Stowaway, you'll see the login page.
+
+### Create Your Account
+
+1. Click **Register** to create a new account
+2. Enter your name, email, and password
+3. Click **Create Account**
+
+!!! info "First User is Admin"
+    The first user to register automatically becomes an administrator with full access to all features.
+
+---
+
+## Dashboard Overview
+
+After logging in, you'll see the dashboard with:
+
+- **Total Items** - Count of all items in your inventory
+- **Total Value** - Combined value of all items
+- **Categories** - Number of categories you've created
+- **Locations** - Number of storage locations
+- **Low Stock Alerts** - Items below minimum quantity
+- **Recent Items** - Your most recently added items
+
+---
+
+## Adding Your First Item
+
+### 1. Navigate to Items
+
+Click **Items** in the sidebar to view your inventory.
+
+### 2. Create New Item
+
+Click the **Add Item** button in the top right.
+
+### 3. Fill in Details
+
+| Field | Description |
+|-------|-------------|
+| Name | The item name (required) |
+| Description | Additional details about the item |
+| Manufacturer | Who made the item |
+| Barcode | Product barcode (e.g., UPC, EAN) |
+| Price | Purchase price |
+| Quantity | How many you have |
+| Min Quantity | Alert threshold |
+| Category | Organizational category |
+| Location | Where it's stored |
+
+### 4. Save
+
+Click **Save** to create your item.
+
+---
+
+## Setting Up Categories
+
+Categories help organize your items with color-coded labels.
+
+### Create a Category
+
+1. Click **Categories** in the sidebar
+2. Click **Add Category**
+3. Enter a name (e.g., "Electronics", "Tools", "Kitchen")
+4. Select a color
+5. Click **Save**
+
+---
+
+## Setting Up Locations
+
+Locations track where items are physically stored.
+
+### Create a Location
+
+1. Click **Locations** in the sidebar
+2. Click **Add Location**
+3. Enter a name (e.g., "Garage Shelf A", "Bedroom Closet")
+4. Optionally add a description
+5. Click **Save**
+
+---
+
+## Scanning Barcodes
+
+Stowaway can scan barcodes using your device's camera.
+
+### How to Scan
+
+1. Navigate to **Items**
+2. Click the **Scan** button
+3. Allow camera access when prompted
+4. Point your camera at a barcode
+5. The system will automatically detect and search for the barcode
+
+---
+
+## Generating QR Codes
+
+Each item can have a QR code for quick access.
+
+### View QR Code
+
+1. Open an item's detail page
+2. Click the **QR Code** button
+3. Print or save the QR code
+4. Scan it later to quickly access the item
+
+---
+
+## Next Steps
+
+- [Configuration](configuration.md) - Customize your settings
+- [Features Guide](../guide/features.md) - Learn about all features
+- [API Reference](../api/index.md) - Integrate with other systems
