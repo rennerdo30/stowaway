@@ -56,3 +56,8 @@ uploads/*
 legacy-java/
 
 /src/generated/prisma
+
+# Astro generated files
+docs/.astro
+docs/dist
+docs/node_modules
