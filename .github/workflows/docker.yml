@@ -12,7 +12,11 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write

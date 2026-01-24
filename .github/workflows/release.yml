@@ -7,7 +7,11 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: write
     steps:
@@ -43,6 +47,7 @@ jobs:
           cd release && tar -czf ../stowaway-${{ github.ref_name }}.tar.gz .
 
       - name: Create GitHub Release
+        if: matrix.runner == 'ubuntu-latest'
         uses: softprops/action-gh-release@v1
         with:
           files: stowaway-${{ github.ref_name }}.tar.gz
