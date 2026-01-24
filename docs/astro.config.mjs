@@ -9,6 +9,8 @@ export default defineConfig({
     starlight({
       title: "Stowaway",
       description: "Modern inventory management system - stow away your items safely",
+      logo: { src: "/logo.svg", alt: "Stowaway" },
+      favicon: "/logo.svg",
       plugins: [starlightThemeGalaxy(), starlightClientMermaid()],
       customCss: ["./src/styles/custom.css"],
       social: [
