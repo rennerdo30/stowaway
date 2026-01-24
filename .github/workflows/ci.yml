@@ -5,10 +5,12 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   lint:
     strategy:
+      fail-fast: false
       matrix:
         runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
     runs-on: ${{ matrix.runner }}
@@ -29,6 +31,7 @@ jobs:
 
   typecheck:
     strategy:
+      fail-fast: false
       matrix:
         runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
     runs-on: ${{ matrix.runner }}
@@ -52,6 +55,7 @@ jobs:
 
   build:
     strategy:
+      fail-fast: false
       matrix:
         runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
     runs-on: ${{ matrix.runner }}
@@ -78,6 +82,7 @@ jobs:
 
   test:
     strategy:
+      fail-fast: false
       matrix:
         runner: [ubuntu-latest, [self-hosted, macOS, ARM64]]
     runs-on: ${{ matrix.runner }}
