@@ -151,6 +151,12 @@ UPLOAD_DIR="./uploads"
 MAX_FILE_SIZE=5242880
 ```
 
+## Documentation
+
+- **Always use Mermaid** for diagrams in documentation
+- Mermaid is supported in the Starlight docs site
+- Avoid external diagram tools or image files when possible
+
 ## Troubleshooting
 
 ### Prisma client not found
