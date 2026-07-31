@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Camera, SwitchCamera } from "lucide-react";
+import { Camera, CameraOff, Loader2, SwitchCamera } from "lucide-react";
 import { toast } from "sonner";
 
 interface BarcodeScannerProps {
@@ -103,59 +104,76 @@ export function BarcodeScanner({ open, onOpenChange, onScan }: BarcodeScannerPro
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
-            Scan Barcode
+            <Camera className="size-5" aria-hidden="true" />
+            Scan barcode
           </DialogTitle>
+          <DialogDescription>
+            Hold the barcode inside the frame — the code is filled in
+            automatically.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {error ? (
-            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-              <p className="text-center">{error}</p>
+            <div
+              role="alert"
+              className="text-muted-foreground flex h-64 flex-col items-center justify-center gap-3 text-center"
+            >
+              <div className="bg-muted flex size-11 items-center justify-center rounded-full">
+                <CameraOff className="size-5" aria-hidden="true" />
+              </div>
+              <p>{error}</p>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setError(null);
                   setCurrentDeviceIndex(0);
                 }}
-                className="mt-4"
               >
-                Try Again
+                Try again
               </Button>
             </div>
           ) : (
             <>
-              <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+              <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
                 <video
                   ref={videoRef}
-                  className="w-full h-full object-cover"
+                  className="size-full object-cover"
                   playsInline
                   muted
                 />
                 {!isScanning && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    role="status"
+                    aria-label="Starting camera"
+                  >
+                    <Loader2
+                      className="size-8 animate-spin text-white"
+                      aria-hidden="true"
+                    />
                   </div>
                 )}
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-1/3 border-2 border-white/50 rounded-lg">
-                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-sm" />
-                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-sm" />
-                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-white rounded-bl-sm" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-white rounded-br-sm" />
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  aria-hidden="true"
+                >
+                  <div className="absolute top-1/2 left-1/2 h-1/3 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-white/50">
+                    <div className="absolute top-0 left-0 size-4 rounded-tl-sm border-t-2 border-l-2 border-white" />
+                    <div className="absolute top-0 right-0 size-4 rounded-tr-sm border-t-2 border-r-2 border-white" />
+                    <div className="absolute bottom-0 left-0 size-4 rounded-bl-sm border-b-2 border-l-2 border-white" />
+                    <div className="absolute right-0 bottom-0 size-4 rounded-br-sm border-b-2 border-r-2 border-white" />
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Point your camera at a barcode
-                </p>
-                {devices.length > 1 && (
+              {devices.length > 1 && (
+                <div className="flex justify-end">
                   <Button variant="ghost" size="sm" onClick={switchCamera}>
-                    <SwitchCamera className="h-4 w-4 mr-2" />
-                    Switch Camera
+                    <SwitchCamera className="size-4" aria-hidden="true" />
+                    Switch camera
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -16,10 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { BarcodeScanner } from "@/components/barcode/barcode-scanner";
+import { CURRENCY_SYMBOL } from "@/lib/format";
 import type { Item, Category, Location } from "@prisma/client";
 
 type ItemWithRelations = Item & {
@@ -30,6 +31,33 @@ type ItemWithRelations = Item & {
 interface ItemFormProps {
   item?: ItemWithRelations;
   mode: "create" | "edit";
+}
+
+/** Sentinel value for the "no relation" option, Radix rejects empty strings. */
+const NO_SELECTION = "none";
+const DESCRIPTION_ROWS = 3;
+const PRICE_STEP = "0.01";
+
+/** Marks a field as required both visually and for assistive technology. */
+function RequiredMark() {
+  return (
+    <>
+      <span aria-hidden="true" className="text-destructive">
+        {" *"}
+      </span>
+      <span className="sr-only"> (required)</span>
+    </>
+  );
+}
+
+/** Inline validation message wired to its field via `aria-describedby`. */
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="text-destructive text-sm">
+      {message}
+    </p>
+  );
 }
 
 export function ItemForm({ item, mode }: ItemFormProps) {
@@ -77,6 +105,7 @@ export function ItemForm({ item, mode }: ItemFormProps) {
       setLocations(locationsData.locations || []);
     } catch (error) {
       console.error("Error fetching filters:", error);
+      toast.error("Failed to load categories and locations");
     }
   }, []);
 
@@ -104,7 +133,11 @@ export function ItemForm({ item, mode }: ItemFormProps) {
         return;
       }
 
-      toast.success(mode === "create" ? "Item created successfully" : "Item updated successfully");
+      toast.success(
+        mode === "create"
+          ? "Item created successfully"
+          : "Item updated successfully"
+      );
       router.push(`/items/${result.id}`);
       router.refresh();
     } catch (error) {
@@ -118,24 +151,34 @@ export function ItemForm({ item, mode }: ItemFormProps) {
   const categoryId = watch("categoryId");
   const locationId = watch("locationId");
 
+  const submitLabel = isLoading
+    ? mode === "create"
+      ? "Creating…"
+      : "Saving…"
+    : mode === "create"
+      ? "Create item"
+      : "Save changes";
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Card>
-        <CardHeader>
-          <CardTitle>{mode === "create" ? "Create Item" : "Edit Item"}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">
+                Name
+                <RequiredMark />
+              </Label>
               <Input
                 id="name"
                 placeholder="Item name"
+                autoComplete="off"
+                aria-required="true"
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? "name-error" : undefined}
                 {...register("name")}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
-              )}
+              <FieldError id="name-error" message={errors.name?.message} />
             </div>
 
             <div className="space-y-2">
@@ -143,6 +186,7 @@ export function ItemForm({ item, mode }: ItemFormProps) {
               <Input
                 id="manufacturer"
                 placeholder="Manufacturer"
+                autoComplete="off"
                 {...register("manufacturer")}
               />
             </div>
@@ -153,22 +197,25 @@ export function ItemForm({ item, mode }: ItemFormProps) {
             <Textarea
               id="description"
               placeholder="Item description"
+              rows={DESCRIPTION_ROWS}
               {...register("description")}
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select
-                value={categoryId || "none"}
-                onValueChange={(value) => setValue("categoryId", value === "none" ? null : value)}
+                value={categoryId || NO_SELECTION}
+                onValueChange={(value) =>
+                  setValue("categoryId", value === NO_SELECTION ? null : value)
+                }
               >
-                <SelectTrigger>
+                <SelectTrigger id="category" className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
+                  <SelectItem value={NO_SELECTION}>No category</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -181,14 +228,16 @@ export function ItemForm({ item, mode }: ItemFormProps) {
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
               <Select
-                value={locationId || "none"}
-                onValueChange={(value) => setValue("locationId", value === "none" ? null : value)}
+                value={locationId || NO_SELECTION}
+                onValueChange={(value) =>
+                  setValue("locationId", value === NO_SELECTION ? null : value)
+                }
               >
-                <SelectTrigger>
+                <SelectTrigger id="location" className="w-full">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No location</SelectItem>
+                  <SelectItem value={NO_SELECTION}>No location</SelectItem>
                   {locations.map((location) => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}
@@ -199,26 +248,34 @@ export function ItemForm({ item, mode }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="buyPrice">Buy Price ($)</Label>
+              <Label htmlFor="buyPrice">{`Buy price (${CURRENCY_SYMBOL})`}</Label>
               <Input
                 id="buyPrice"
                 type="number"
-                step="0.01"
+                inputMode="decimal"
+                step={PRICE_STEP}
                 min="0"
+                className="tabular-nums"
+                aria-invalid={Boolean(errors.buyPrice)}
+                aria-describedby={
+                  errors.buyPrice ? "buyPrice-error" : undefined
+                }
                 {...register("buyPrice", { valueAsNumber: true })}
               />
-              {errors.buyPrice && (
-                <p className="text-sm text-destructive">{errors.buyPrice.message}</p>
-              )}
+              <FieldError
+                id="buyPrice-error"
+                message={errors.buyPrice?.message}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="buyDate">Buy Date</Label>
+              <Label htmlFor="buyDate">Buy date</Label>
               <Input
                 id="buyDate"
                 type="date"
+                className="tabular-nums"
                 {...register("buyDate")}
               />
             </div>
@@ -229,6 +286,8 @@ export function ItemForm({ item, mode }: ItemFormProps) {
                 <Input
                   id="barcode"
                   placeholder="Barcode"
+                  inputMode="numeric"
+                  autoComplete="off"
                   {...register("barcode")}
                 />
                 <Button
@@ -236,58 +295,80 @@ export function ItemForm({ item, mode }: ItemFormProps) {
                   variant="outline"
                   size="icon"
                   onClick={() => setScannerOpen(true)}
-                  title="Scan barcode"
+                  aria-label="Scan barcode with camera"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="size-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
               <Input
                 id="quantity"
                 type="number"
+                inputMode="numeric"
                 min="0"
+                className="tabular-nums"
+                aria-invalid={Boolean(errors.quantity)}
+                aria-describedby={
+                  errors.quantity ? "quantity-error" : undefined
+                }
                 {...register("quantity", { valueAsNumber: true })}
               />
-              {errors.quantity && (
-                <p className="text-sm text-destructive">{errors.quantity.message}</p>
-              )}
+              <FieldError
+                id="quantity-error"
+                message={errors.quantity?.message}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="minQuantity">Minimum Quantity (Low Stock Alert)</Label>
+              <Label htmlFor="minQuantity">Minimum quantity</Label>
               <Input
                 id="minQuantity"
                 type="number"
+                inputMode="numeric"
                 min="0"
+                className="tabular-nums"
+                aria-invalid={Boolean(errors.minQuantity)}
+                aria-describedby={
+                  errors.minQuantity
+                    ? "minQuantity-hint minQuantity-error"
+                    : "minQuantity-hint"
+                }
                 {...register("minQuantity", { valueAsNumber: true })}
               />
-              {errors.minQuantity && (
-                <p className="text-sm text-destructive">{errors.minQuantity.message}</p>
-              )}
+              <p id="minQuantity-hint" className="text-muted-foreground text-sm">
+                Triggers a low stock alert when the quantity reaches this
+                number. Use 0 to disable.
+              </p>
+              <FieldError
+                id="minQuantity-error"
+                message={errors.minQuantity?.message}
+              />
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex flex-col-reverse gap-2 border-t sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => router.back()}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading
-              ? mode === "create"
-                ? "Creating..."
-                : "Saving..."
-              : mode === "create"
-              ? "Create Item"
-              : "Save Changes"}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full sm:w-auto"
+          >
+            {isLoading && (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            )}
+            {submitLabel}
           </Button>
         </CardFooter>
       </Card>
