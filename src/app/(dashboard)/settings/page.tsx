@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,17 +20,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Download, Upload, Sun, Moon, Monitor, Database } from "lucide-react";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import { Download, Upload, Database, Loader2, Palette } from "lucide-react";
 import { toast } from "sonner";
+import { DEFAULT_THEME, THEME_OPTIONS } from "@/lib/theme";
+import { EMPTY_VALUE } from "@/lib/constants";
+
+/** Export formats offered by `/api/export`. */
+const EXPORT_FORMATS = [
+  { value: "json", label: "Export JSON" },
+  { value: "csv", label: "Export CSV" },
+] as const;
+
+type ExportFormat = (typeof EXPORT_FORMATS)[number]["value"];
+
+const EXPORT_FILENAME_PREFIX = "inventory-export";
+const IMPORT_FILE_INPUT_ID = "import-file";
+const IMPORT_ACCEPTED_TYPES = ".json,.csv";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(
+    null
+  );
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleExport = async (format: "json" | "csv") => {
-    setIsExporting(true);
+  const handleExport = async (format: ExportFormat) => {
+    setExportingFormat(format);
     try {
       const response = await fetch(`/api/export?format=${format}`);
       if (!response.ok) {
@@ -33,12 +56,13 @@ export default function SettingsPage() {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `inventory-export-${new Date().toISOString().split("T")[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      const today = new Date().toISOString().split("T")[0];
+      anchor.download = `${EXPORT_FILENAME_PREFIX}-${today}.${format}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
 
       toast.success(`Data exported as ${format.toUpperCase()}`);
@@ -46,7 +70,7 @@ export default function SettingsPage() {
       console.error("Export error:", error);
       toast.error("Failed to export data");
     } finally {
-      setIsExporting(false);
+      setExportingFormat(null);
     }
   };
 
@@ -73,60 +97,61 @@ export default function SettingsPage() {
       toast.success(`Imported ${data.itemsImported} items successfully`);
     } catch (error) {
       console.error("Import error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to import data");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to import data"
+      );
     } finally {
       setIsImporting(false);
       e.target.value = "";
     }
   };
 
+  const accountFields = [
+    { label: "Name", value: session?.user?.name || EMPTY_VALUE },
+    { label: "Email", value: session?.user?.email || EMPTY_VALUE },
+    {
+      label: "Role",
+      value: session?.user?.role?.toLowerCase() || EMPTY_VALUE,
+      capitalize: true,
+    },
+  ];
+
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your application preferences
-        </p>
-      </div>
+    <PageShell width="form">
+      <PageHeader
+        title="Settings"
+        description="Manage your application preferences"
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>
-            Customize how the application looks
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Palette className="size-4" aria-hidden="true" />
+            Appearance
+          </CardTitle>
+          <CardDescription>Customize how the application looks</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Theme</Label>
-              <p className="text-sm text-muted-foreground">
+        <CardContent>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="theme-select">Theme</Label>
+              <p className="text-muted-foreground text-sm">
                 Select your preferred color scheme
               </p>
             </div>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger className="w-[180px]">
+            <Select value={theme ?? DEFAULT_THEME} onValueChange={setTheme}>
+              <SelectTrigger id="theme-select" className="w-full sm:w-44">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4" />
-                    Light
-                  </div>
-                </SelectItem>
-                <SelectItem value="dark">
-                  <div className="flex items-center gap-2">
-                    <Moon className="h-4 w-4" />
-                    Dark
-                  </div>
-                </SelectItem>
-                <SelectItem value="system">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
-                    System
-                  </div>
-                </SelectItem>
+                {THEME_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <span className="flex items-center gap-2">
+                      <option.icon className="size-4" aria-hidden="true" />
+                      {option.label}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -135,93 +160,101 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Data Management
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Database className="size-4" aria-hidden="true" />
+            Data management
           </CardTitle>
           <CardDescription>
             Export or import your inventory data
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <h3 className="text-sm font-medium mb-2">Export Data</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Download all your items, categories, and locations as a backup file.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleExport("json")}
-                disabled={isExporting}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export JSON
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleExport("csv")}
-                disabled={isExporting}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
+          <section className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-sm font-medium">Export data</h2>
+              <p className="text-muted-foreground text-sm">
+                Download all your items, categories and locations as a backup
+                file.
+              </p>
             </div>
-          </div>
+            <div className="flex flex-wrap gap-2">
+              {EXPORT_FORMATS.map((format) => (
+                <Button
+                  key={format.value}
+                  variant="outline"
+                  onClick={() => handleExport(format.value)}
+                  disabled={exportingFormat !== null}
+                >
+                  {exportingFormat === format.value ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Download className="size-4" aria-hidden="true" />
+                  )}
+                  {format.label}
+                </Button>
+              ))}
+            </div>
+          </section>
 
           <Separator />
 
-          <div>
-            <h3 className="text-sm font-medium mb-2">Import Data</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Import items from a JSON or CSV file. This will add to your existing data.
-            </p>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                accept=".json,.csv"
-                onChange={handleImport}
-                disabled={isImporting}
-                className="hidden"
-                id="import-file"
-              />
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById("import-file")?.click()}
-                disabled={isImporting}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {isImporting ? "Importing..." : "Import File"}
-              </Button>
+          <section className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-sm font-medium">Import data</h2>
+              <p className="text-muted-foreground text-sm">
+                Import items from a JSON or CSV file. This adds to your existing
+                data.
+              </p>
             </div>
-          </div>
+            <input
+              type="file"
+              accept={IMPORT_ACCEPTED_TYPES}
+              onChange={handleImport}
+              disabled={isImporting}
+              className="sr-only"
+              id={IMPORT_FILE_INPUT_ID}
+            />
+            <Button
+              variant="outline"
+              aria-controls={IMPORT_FILE_INPUT_ID}
+              onClick={() =>
+                document.getElementById(IMPORT_FILE_INPUT_ID)?.click()
+              }
+              disabled={isImporting}
+            >
+              {isImporting ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Upload className="size-4" aria-hidden="true" />
+              )}
+              {isImporting ? "Importing…" : "Choose file"}
+            </Button>
+          </section>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>
-            Your account information
-          </CardDescription>
+          <CardTitle className="text-base">Account</CardTitle>
+          <CardDescription>Your account information</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <div>
-              <Label className="text-muted-foreground">Name</Label>
-              <p className="font-medium">{session?.user?.name || "-"}</p>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Email</Label>
-              <p className="font-medium">{session?.user?.email}</p>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Role</Label>
-              <p className="font-medium capitalize">{session?.user?.role?.toLowerCase()}</p>
-            </div>
-          </div>
+        <CardContent>
+          <dl className="grid gap-4 sm:grid-cols-3">
+            {accountFields.map((field) => (
+              <div key={field.label} className="space-y-1">
+                <dt className="text-muted-foreground text-sm">{field.label}</dt>
+                <dd
+                  className={`font-medium break-words ${
+                    field.capitalize ? "capitalize" : ""
+                  }`}
+                >
+                  {field.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }
