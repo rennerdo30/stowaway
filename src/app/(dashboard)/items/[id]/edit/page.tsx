@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ItemForm } from "@/components/items/item-form";
+import { Button } from "@/components/ui/button";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 
 interface EditItemPageProps {
   params: Promise<{ id: string }>;
@@ -36,14 +40,24 @@ export default async function EditItemPage({ params }: EditItemPageProps) {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Edit Item</h1>
-        <p className="text-muted-foreground">
-          Update {item.name}
-        </p>
-      </div>
+    <PageShell width="form">
+      <PageHeader
+        title="Edit item"
+        description={item.name}
+        leading={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back to item"
+            asChild
+          >
+            <Link href={`/items/${item.id}`}>
+              <ArrowLeft className="size-5" aria-hidden="true" />
+            </Link>
+          </Button>
+        }
+      />
       <ItemForm item={item} mode="edit" />
-    </div>
+    </PageShell>
   );
 }

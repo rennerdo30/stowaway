@@ -104,24 +104,28 @@ export function QRCodeDisplay({ value, size = 256 }: QRCodeDisplayProps) {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="bg-white p-4 rounded-lg">
-        <canvas ref={canvasRef} />
+    <div className="flex flex-col items-center gap-4">
+      <div className="border-border rounded-xl border bg-white p-4 shadow-sm">
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label={`QR code linking to ${value}`}
+        />
       </div>
-      <p className="text-xs text-muted-foreground text-center break-all max-w-[256px]">
+      <p className="text-muted-foreground max-w-64 text-center text-xs break-all">
         {value}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         <Button variant="outline" size="sm" onClick={handleCopy}>
-          <Copy className="mr-2 h-4 w-4" />
-          Copy Link
+          <Copy className="size-4" aria-hidden="true" />
+          Copy link
         </Button>
         <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="mr-2 h-4 w-4" />
+          <Download className="size-4" aria-hidden="true" />
           Download
         </Button>
         <Button variant="outline" size="sm" onClick={handlePrint}>
-          <Printer className="mr-2 h-4 w-4" />
+          <Printer className="size-4" aria-hidden="true" />
           Print
         </Button>
       </div>

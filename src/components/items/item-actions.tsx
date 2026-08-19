@@ -64,13 +64,13 @@ export function ItemActions({ itemId, showQrOnly = false }: ItemActionsProps) {
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
         <DialogTrigger asChild>
           <Button variant="outline">
-            <QrCode className="mr-2 h-4 w-4" />
-            Show QR Code
+            <QrCode className="size-4" aria-hidden="true" />
+            Show QR code
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Item QR Code</DialogTitle>
+            <DialogTitle>Item QR code</DialogTitle>
           </DialogHeader>
           <QRCodeDisplay value={qrUrl} />
         </DialogContent>
@@ -81,21 +81,21 @@ export function ItemActions({ itemId, showQrOnly = false }: ItemActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <MoreHorizontal className="h-4 w-4" />
+        <Button variant="outline" size="icon" aria-label="More item actions">
+          <MoreHorizontal className="size-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
           <DialogTrigger asChild>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <QrCode className="mr-2 h-4 w-4" />
-              Show QR Code
+              <QrCode className="mr-2 size-4" aria-hidden="true" />
+              Show QR code
             </DropdownMenuItem>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Item QR Code</DialogTitle>
+              <DialogTitle>Item QR code</DialogTitle>
             </DialogHeader>
             <QRCodeDisplay value={qrUrl} />
           </DialogContent>
@@ -105,8 +105,8 @@ export function ItemActions({ itemId, showQrOnly = false }: ItemActionsProps) {
           disabled={isDeleting}
           className="text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" />
-          {isDeleting ? "Deleting..." : "Delete"}
+          <Trash2 className="mr-2 size-4" aria-hidden="true" />
+          {isDeleting ? "Deleting…" : "Delete"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

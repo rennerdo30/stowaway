@@ -1,8 +1,23 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Tags, MapPin, AlertTriangle, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+import {
+  Package,
+  Tags,
+  MapPin,
+  AlertTriangle,
+  TrendingUp,
+  Plus,
+  ArrowRight,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { formatCurrency, formatNumber, tintColor } from "@/lib/format";
+import { RECENT_ITEMS_LIMIT } from "@/lib/constants";
 
 async function getDashboardStats(userId: string) {
   const [
@@ -19,7 +34,7 @@ async function getDashboardStats(userId: string) {
     db.item.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: RECENT_ITEMS_LIMIT,
       include: { category: true, location: true },
     }),
     db.item.aggregate({
@@ -47,6 +62,47 @@ async function getDashboardStats(userId: string) {
   };
 }
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  hint: string;
+  icon: LucideIcon;
+  href?: string;
+}
+
+function StatCard({ title, value, hint, icon: Icon, href }: StatCardProps) {
+  const card = (
+    <Card
+      className={
+        href
+          ? "hover:border-ring/60 h-full gap-4 transition-all hover:shadow-md"
+          : "h-full gap-4"
+      }
+    >
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+        <CardTitle className="text-muted-foreground text-sm font-medium">
+          {title}
+        </CardTitle>
+        <Icon className="text-muted-foreground size-4" aria-hidden="true" />
+      </CardHeader>
+      <CardContent className="space-y-1">
+        <div className="text-3xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </div>
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return card;
+
+  return (
+    <Link href={href} className="block rounded-xl">
+      {card}
+    </Link>
+  );
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) return null;
@@ -54,142 +110,147 @@ export default async function DashboardPage() {
   const stats = await getDashboardStats(session.user.id);
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {session.user.name || session.user.email}
-        </p>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Dashboard"
+        description={`Welcome back, ${session.user.name || session.user.email}`}
+        actions={
+          <Button asChild>
+            <Link href="/items/new">
+              <Plus className="size-4" aria-hidden="true" />
+              Add item
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalItems}</div>
-            <p className="text-xs text-muted-foreground">
-              Items in your inventory
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${stats.totalValue.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Combined inventory value
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
-            <Tags className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCategories}</div>
-            <p className="text-xs text-muted-foreground">
-              Active categories
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Locations</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalLocations}</div>
-            <p className="text-xs text-muted-foreground">
-              Storage locations
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total items"
+          value={formatNumber(stats.totalItems)}
+          hint="Items in your inventory"
+          icon={Package}
+          href="/items"
+        />
+        <StatCard
+          title="Total value"
+          value={formatCurrency(stats.totalValue)}
+          hint="Combined inventory value"
+          icon={TrendingUp}
+        />
+        <StatCard
+          title="Categories"
+          value={formatNumber(stats.totalCategories)}
+          hint="Active categories"
+          icon={Tags}
+          href="/categories"
+        />
+        <StatCard
+          title="Locations"
+          value={formatNumber(stats.totalLocations)}
+          hint="Storage locations"
+          icon={MapPin}
+          href="/locations"
+        />
       </div>
 
       {/* Low Stock Alert */}
       {stats.lowStockItems > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <CardTitle className="text-base font-medium text-destructive">
-              Low Stock Alert
+        <Card className="border-warning/40 bg-warning/5 gap-3">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <AlertTriangle className="text-warning size-5" aria-hidden="true" />
+            <CardTitle className="text-warning text-base font-semibold">
+              Low stock alert
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {stats.lowStockItems} item{stats.lowStockItems > 1 ? "s" : ""} below minimum stock level.{" "}
-              <Link href="/items?filter=low-stock" className="text-primary hover:underline">
-                View items
-              </Link>
+          <CardContent className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="text-muted-foreground text-sm">
+              {stats.lowStockItems === 1
+                ? "1 item is at or below its minimum stock level."
+                : `${formatNumber(stats.lowStockItems)} items are at or below their minimum stock level.`}
             </p>
+            <Button variant="link" size="sm" className="h-auto p-0" asChild>
+              <Link href="/items?filter=low-stock">
+                View items
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {/* Recent Items */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.recentItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No items yet.{" "}
-              <Link href="/items/new" className="text-primary hover:underline">
-                Add your first item
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle>Recent items</CardTitle>
+          {stats.recentItems.length > 0 && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/items">
+                View all
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-            </p>
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="pt-0">
+          {stats.recentItems.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No items yet"
+              description="Add your first item to start tracking quantities, locations and value."
+              action={
+                <Button asChild size="sm">
+                  <Link href="/items/new">
+                    <Plus className="size-4" aria-hidden="true" />
+                    Add your first item
+                  </Link>
+                </Button>
+              }
+            />
           ) : (
-            <div className="space-y-4">
+            <ul className="divide-border -my-2 divide-y">
               {stats.recentItems.map((item) => (
-                <div
+                <li
                   key={item.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                  className="hover:bg-muted/40 -mx-2 flex flex-wrap items-center justify-between gap-3 rounded-md px-2 py-3 transition-colors"
                 >
-                  <div className="space-y-1">
+                  <div className="min-w-0 space-y-1">
                     <Link
                       href={`/items/${item.id}`}
                       className="font-medium hover:underline"
                     >
                       {item.name}
                     </Link>
-                    <div className="flex gap-2 text-sm text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                       {item.category && (
-                        <span
-                          className="px-2 py-0.5 rounded-full text-xs"
-                          style={{ backgroundColor: item.category.color + "20", color: item.category.color }}
+                        <Badge
+                          variant="secondary"
+                          style={{
+                            backgroundColor: tintColor(item.category.color),
+                            color: item.category.color,
+                          }}
                         >
                           {item.category.name}
-                        </span>
+                        </Badge>
                       )}
                       {item.location && <span>{item.location.name}</span>}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">${item.buyPrice.toFixed(2)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Qty: {item.quantity}
+                    <div className="font-medium tabular-nums">
+                      {formatCurrency(item.buyPrice)}
+                    </div>
+                    <div className="text-muted-foreground text-sm tabular-nums">
+                      Qty {formatNumber(item.quantity)}
                     </div>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }
