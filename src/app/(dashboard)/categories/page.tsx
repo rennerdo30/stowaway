@@ -1,15 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, Tags } from "lucide-react";
+import { Plus, Pencil, Trash2, Tags, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { formatNumber, tintColor } from "@/lib/format";
 
 interface Category {
   id: string;
@@ -35,30 +41,38 @@ interface Category {
 }
 
 const PRESET_COLORS = [
-  "#ef4444", // red
-  "#f97316", // orange
-  "#f59e0b", // amber
-  "#84cc16", // lime
-  "#22c55e", // green
-  "#14b8a6", // teal
-  "#06b6d4", // cyan
-  "#0ea5e9", // sky
-  "#3b82f6", // blue
-  "#6366f1", // indigo
-  "#8b5cf6", // violet
-  "#a855f7", // purple
-  "#d946ef", // fuchsia
-  "#ec4899", // pink
-  "#f43f5e", // rose
-];
+  { value: "#ef4444", label: "Red" },
+  { value: "#f97316", label: "Orange" },
+  { value: "#f59e0b", label: "Amber" },
+  { value: "#84cc16", label: "Lime" },
+  { value: "#22c55e", label: "Green" },
+  { value: "#14b8a6", label: "Teal" },
+  { value: "#06b6d4", label: "Cyan" },
+  { value: "#0ea5e9", label: "Sky" },
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#6366f1", label: "Indigo" },
+  { value: "#8b5cf6", label: "Violet" },
+  { value: "#a855f7", label: "Purple" },
+  { value: "#d946ef", label: "Fuchsia" },
+  { value: "#ec4899", label: "Pink" },
+  { value: "#f43f5e", label: "Rose" },
+] as const;
+
+/** Default color for a new category (indigo-500, matches the Prisma default). */
+const DEFAULT_CATEGORY_COLOR = "#6366f1";
+const CATEGORY_TABLE_COLUMNS = 4;
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ name: "", color: "#6366f1" });
+  const [formData, setFormData] = useState({
+    name: "",
+    color: DEFAULT_CATEGORY_COLOR,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -83,7 +97,7 @@ export default function CategoriesPage() {
       setFormData({ name: category.name, color: category.color });
     } else {
       setEditingCategory(null);
-      setFormData({ name: "", color: "#6366f1" });
+      setFormData({ name: "", color: DEFAULT_CATEGORY_COLOR });
     }
     setDialogOpen(true);
   };
@@ -91,7 +105,7 @@ export default function CategoriesPage() {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setEditingCategory(null);
-    setFormData({ name: "", color: "#6366f1" });
+    setFormData({ name: "", color: DEFAULT_CATEGORY_COLOR });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,10 +151,15 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? Items in this category will be unassigned.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${name}"? Items in this category will be unassigned.`
+      )
+    ) {
       return;
     }
 
+    setDeletingId(id);
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -156,33 +175,34 @@ export default function CategoriesPage() {
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error("Failed to delete category");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="text-muted-foreground">
-            Organize your items with categories
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? "Edit Category" : "Add Category"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
+    <PageShell>
+      <PageHeader
+        title="Categories"
+        description="Organize your items with color-coded categories"
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="size-4" aria-hidden="true" />
+                Add category
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingCategory ? "Edit category" : "Add category"}
+                </DialogTitle>
+                <DialogDescription>
+                  Pick a name and a color used for the category badge.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -192,28 +212,41 @@ export default function CategoriesPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder="Category name"
+                    autoComplete="off"
+                    required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Color</Label>
+
+                <fieldset className="space-y-3">
+                  <legend className="text-sm leading-none font-medium">
+                    Color
+                  </legend>
                   <div className="flex flex-wrap gap-2">
-                    {PRESET_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          formData.color === color
-                            ? "border-foreground scale-110"
-                            : "border-transparent"
-                        }`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setFormData({ ...formData, color })}
-                      />
-                    ))}
+                    {PRESET_COLORS.map((color) => {
+                      const isSelected = formData.color === color.value;
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          aria-label={color.label}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            "focus-visible:ring-ring/50 size-8 rounded-full border-2 transition-transform focus-visible:ring-[3px] focus-visible:outline-none",
+                            isSelected
+                              ? "border-foreground scale-110"
+                              : "border-transparent hover:scale-105"
+                          )}
+                          style={{ backgroundColor: color.value }}
+                          onClick={() =>
+                            setFormData({ ...formData, color: color.value })
+                          }
+                        />
+                      );
+                    })}
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Label htmlFor="customColor" className="text-sm">
-                      Custom:
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label htmlFor="customColor" className="font-normal">
+                      Custom
                     </Label>
                     <Input
                       id="customColor"
@@ -222,116 +255,150 @@ export default function CategoriesPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, color: e.target.value })
                       }
-                      className="w-12 h-8 p-0 border-0"
+                      className="h-9 w-12 cursor-pointer p-1"
                     />
                     <Input
                       value={formData.color}
                       onChange={(e) =>
                         setFormData({ ...formData, color: e.target.value })
                       }
-                      className="w-24 font-mono text-sm"
+                      className="w-28 font-mono text-sm"
                       placeholder="#000000"
+                      aria-label="Color hex value"
                     />
                   </div>
-                </div>
+                </fieldset>
+
                 <div className="space-y-2">
-                  <Label>Preview</Label>
+                  <p className="text-sm leading-none font-medium">Preview</p>
                   <Badge
                     style={{
-                      backgroundColor: formData.color + "20",
+                      backgroundColor: tintColor(formData.color),
                       color: formData.color,
                     }}
                   >
-                    {formData.name || "Category Name"}
+                    {formData.name || "Category name"}
                   </Badge>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseDialog}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? "Saving..."
-                    : editingCategory
-                    ? "Update"
-                    : "Create"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      <Card>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDialog}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && (
+                      <Loader2
+                        className="size-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {isSubmitting
+                      ? "Saving…"
+                      : editingCategory
+                        ? "Update"
+                        : "Create"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        }
+      />
+
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tags className="h-5 w-5" />
-            All Categories
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Tags className="size-4" aria-hidden="true" />
+            All categories
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
+            <TableSkeleton columns={CATEGORY_TABLE_COLUMNS} />
           ) : categories.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <p>No categories yet</p>
-              <p className="text-sm">Create your first category to get started</p>
-            </div>
+            <EmptyState
+              icon={Tags}
+              title="No categories yet"
+              description="Categories group your items and color their badges across the app."
+              action={
+                <Button size="sm" onClick={() => handleOpenDialog()}>
+                  <Plus className="size-4" aria-hidden="true" />
+                  Add your first category
+                </Button>
+              }
+            />
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/40">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="px-6">Name</TableHead>
+                  <TableHead className="px-6">Color</TableHead>
+                  <TableHead className="px-6 text-right">Items</TableHead>
+                  <TableHead className="w-24 px-6">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {categories.map((category) => (
                   <TableRow key={category.id}>
-                    <TableCell>
+                    <TableCell className="px-6 py-3">
                       <Badge
                         style={{
-                          backgroundColor: category.color + "20",
+                          backgroundColor: tintColor(category.color),
                           color: category.color,
                         }}
                       >
                         {category.name}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-6 py-3">
                       <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded-full border"
+                        <span
+                          className="border-border size-5 rounded-full border"
                           style={{ backgroundColor: category.color }}
+                          aria-hidden="true"
                         />
-                        <code className="text-xs">{category.color}</code>
+                        <code className="text-muted-foreground font-mono text-xs">
+                          {category.color}
+                        </code>
                       </div>
                     </TableCell>
-                    <TableCell>{category._count.items}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                    <TableCell className="px-6 py-3 text-right tabular-nums">
+                      {formatNumber(category._count.items)}
+                    </TableCell>
+                    <TableCell className="px-6 py-3">
+                      <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon-sm"
+                          aria-label={`Edit ${category.name}`}
                           onClick={() => handleOpenDialog(category)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="size-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(category.id, category.name)}
+                          size="icon-sm"
+                          aria-label={`Delete ${category.name}`}
+                          disabled={deletingId === category.id}
+                          className="text-destructive hover:text-destructive"
+                          onClick={() =>
+                            handleDelete(category.id, category.name)
+                          }
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          {deletingId === category.id ? (
+                            <Loader2
+                              className="size-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
@@ -342,6 +409,6 @@ export default function CategoriesPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

@@ -15,13 +15,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Pencil, Trash2, QrCode } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { MoreHorizontal, Eye, Pencil, Trash2, QrCode, Package } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Column } from "./columns";
+
+/** Width reserved for the trailing actions column. */
+const ACTIONS_COLUMN_WIDTH = "w-12";
 
 interface DataTableProps<T extends { id: string }> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  emptyAction?: React.ReactNode;
   onDelete?: (id: string) => void;
   onView?: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -32,67 +41,88 @@ export function DataTable<T extends { id: string }>({
   columns,
   data,
   loading,
+  emptyTitle = "No items found",
+  emptyDescription,
+  emptyAction,
   onDelete,
   onView,
   onEdit,
   onShowQr,
 }: DataTableProps<T>) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <TableSkeleton columns={columns.length} />;
   }
 
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <p>No items found</p>
-      </div>
+      <EmptyState
+        icon={Package}
+        title={emptyTitle}
+        description={emptyDescription}
+        action={emptyAction}
+      />
     );
   }
 
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="bg-muted/40">
         <TableRow>
           {columns.map((column) => (
-            <TableHead key={column.key}>{column.header}</TableHead>
+            <TableHead
+              key={column.key}
+              className={cn("px-4", column.align === "right" && "text-right")}
+            >
+              {column.header}
+            </TableHead>
           ))}
-          <TableHead className="w-[70px]">Actions</TableHead>
+          <TableHead className={cn("px-4", ACTIONS_COLUMN_WIDTH)}>
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((item) => (
           <TableRow key={item.id}>
             {columns.map((column) => (
-              <TableCell key={column.key}>{column.cell(item)}</TableCell>
+              <TableCell
+                key={column.key}
+                className={cn(
+                  "px-4 py-3",
+                  column.align === "right" && "text-right tabular-nums"
+                )}
+              >
+                {column.cell(item)}
+              </TableCell>
             ))}
-            <TableCell>
+            <TableCell className="px-4 py-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Open row actions"
+                  >
+                    <MoreHorizontal className="size-4" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {onView && (
                     <DropdownMenuItem onClick={() => onView(item.id)}>
-                      <Eye className="mr-2 h-4 w-4" />
+                      <Eye className="mr-2 size-4" aria-hidden="true" />
                       View
                     </DropdownMenuItem>
                   )}
                   {onEdit && (
                     <DropdownMenuItem onClick={() => onEdit(item.id)}>
-                      <Pencil className="mr-2 h-4 w-4" />
+                      <Pencil className="mr-2 size-4" aria-hidden="true" />
                       Edit
                     </DropdownMenuItem>
                   )}
                   {onShowQr && (
                     <DropdownMenuItem onClick={() => onShowQr(item.id)}>
-                      <QrCode className="mr-2 h-4 w-4" />
-                      Show QR Code
+                      <QrCode className="mr-2 size-4" aria-hidden="true" />
+                      Show QR code
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
@@ -100,7 +130,7 @@ export function DataTable<T extends { id: string }>({
                       onClick={() => onDelete(item.id)}
                       className="text-destructive"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
+                      <Trash2 className="mr-2 size-4" aria-hidden="true" />
                       Delete
                     </DropdownMenuItem>
                   )}

@@ -2,6 +2,8 @@
 
 A modern, self-hosted web application for managing your inventory. Track items, categories, locations, and quantities with ease.
 
+Stowaway is built for the "where did I put that, and how many are left?" problem — home labs, workshops, spare parts, hobby supplies. It runs as a single container with a SQLite file for storage, so there is no external database to operate. Each account has its own inventory, and the first account you register becomes the administrator.
+
 ## Features
 
 - **Item Management** - Create, edit, and delete items with detailed information
@@ -23,11 +25,17 @@ A modern, self-hosted web application for managing your inventory. Track items, 
 git clone https://github.com/rennerdo30/stowaway.git
 cd stowaway
 
-# Start with Docker Compose
-docker-compose up -d
+# Set a signing secret, then start
+export AUTH_SECRET="$(openssl rand -base64 32)"
+docker compose up -d
 
-# Open http://localhost:3000
+# Open http://localhost:3000 and register the first account
 ```
+
+`docker-compose.yml` falls back to a placeholder `AUTH_SECRET` if you do not
+provide one. Set your own before exposing the app to anything but localhost.
+Item data and uploads are kept in the `stowaway-data` and `stowaway-uploads`
+volumes.
 
 ### Manual Installation
 
@@ -50,8 +58,10 @@ npx prisma migrate deploy
 npm run build
 npm start
 
-# Open http://localhost:3000
+# Open http://localhost:3000 and register the first account
 ```
+
+Requires Node.js 20 or newer.
 
 ## Configuration
 
@@ -79,24 +89,31 @@ npm run dev
 # Run linter
 npm run lint
 
-# Run tests
-npm test
+# Apply schema changes during development
+npm run db:push
 
 # Open Prisma Studio (database GUI)
-npx prisma studio
+npm run db:studio
 ```
+
+An automated test suite is not set up yet — `npm test` is a placeholder that
+exits successfully. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Tech Stack
 
-- **Framework**: [Next.js 14+](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router) with [React 19](https://react.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Database**: [SQLite](https://www.sqlite.org/) with [Prisma](https://www.prisma.io/)
-- **Authentication**: [NextAuth.js v5](https://authjs.dev/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Authentication**: [Auth.js / NextAuth v5](https://authjs.dev/) (credentials)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/) on [Radix UI](https://www.radix-ui.com/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Forms & Validation**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/)
+- **Barcodes & QR**: [ZXing](https://github.com/zxing-js/library) and [node-qrcode](https://github.com/soldair/node-qrcode)
 
-## Screenshots
+## Documentation
 
-*Coming soon*
+Longer-form docs live in [`docs/`](docs) and are built with
+[Astro Starlight](https://starlight.astro.build/).
 
 ## Contributing
 

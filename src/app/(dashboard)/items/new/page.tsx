@@ -1,15 +1,28 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { ItemForm } from "@/components/items/item-form";
+import { Button } from "@/components/ui/button";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
+
+export const metadata = {
+  title: "Add item",
+};
 
 export default function NewItemPage() {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Add New Item</h1>
-        <p className="text-muted-foreground">
-          Add a new item to your inventory
-        </p>
-      </div>
+    <PageShell width="form">
+      <PageHeader
+        title="Add new item"
+        description="Add a new item to your inventory"
+        leading={
+          <Button variant="ghost" size="icon" aria-label="Back to items" asChild>
+            <Link href="/items">
+              <ArrowLeft className="size-5" aria-hidden="true" />
+            </Link>
+          </Button>
+        }
+      />
       <ItemForm mode="create" />
-    </div>
+    </PageShell>
   );
 }

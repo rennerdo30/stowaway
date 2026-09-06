@@ -24,6 +24,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -43,10 +45,23 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Layout scale — single source of truth for the app chrome. */
+  --spacing-sidebar: var(--layout-sidebar-width);
+  --spacing-header: var(--layout-header-height);
+  --container-page: var(--layout-page-max-width);
+  --container-form: var(--layout-form-max-width);
 }
 
 :root {
   --radius: 0.625rem;
+
+  /* Layout constants (consumed by the @theme layout scale above). */
+  --layout-sidebar-width: 16rem;
+  --layout-header-height: 4rem;
+  --layout-page-max-width: 88rem;
+  --layout-form-max-width: 48rem;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -58,13 +73,17 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* 0.52 keeps secondary text at >=4.5:1 on --background and --card. */
+  --muted-foreground: oklch(0.52 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --warning: oklch(0.52 0.13 62);
+  --warning-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* Darkened from the shadcn default so focus rings stay clearly visible. */
+  --ring: oklch(0.55 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -92,13 +111,16 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted-foreground: oklch(0.729 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(0.82 0.15 78);
+  --warning-foreground: oklch(0.205 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* Lightened from the shadcn default so focus rings stay clearly visible. */
+  --ring: oklch(0.72 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -118,7 +140,36 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings share one tight, consistent rhythm. */
+  h1,
+  h2,
+  h3 {
+    @apply text-balance;
+    letter-spacing: -0.015em;
+  }
+
+  /* Every interactive element gets the same visible focus ring. */
+  a:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    @apply ring-ring/50 rounded-sm ring-[3px] outline-none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

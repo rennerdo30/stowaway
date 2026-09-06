@@ -1,15 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { PageHeader, PageShell } from "@/components/layout/page-shell";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { formatNumber } from "@/lib/format";
+import { EMPTY_VALUE } from "@/lib/constants";
 
 interface Location {
   id: string;
@@ -34,6 +40,9 @@ interface Location {
   };
 }
 
+const LOCATION_TABLE_COLUMNS = 4;
+const DESCRIPTION_ROWS = 3;
+
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +50,7 @@ export default function LocationsPage() {
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -62,7 +72,10 @@ export default function LocationsPage() {
   const handleOpenDialog = (location?: Location) => {
     if (location) {
       setEditingLocation(location);
-      setFormData({ name: location.name, description: location.description || "" });
+      setFormData({
+        name: location.name,
+        description: location.description || "",
+      });
     } else {
       setEditingLocation(null);
       setFormData({ name: "", description: "" });
@@ -119,10 +132,15 @@ export default function LocationsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? Items in this location will be unassigned.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${name}"? Items in this location will be unassigned.`
+      )
+    ) {
       return;
     }
 
+    setDeletingId(id);
     try {
       const response = await fetch(`/api/locations/${id}`, {
         method: "DELETE",
@@ -138,33 +156,34 @@ export default function LocationsPage() {
     } catch (error) {
       console.error("Error deleting location:", error);
       toast.error("Failed to delete location");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Locations</h1>
-          <p className="text-muted-foreground">
-            Manage storage locations for your items
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Location
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingLocation ? "Edit Location" : "Add Location"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
+    <PageShell>
+      <PageHeader
+        title="Locations"
+        description="Manage storage locations for your items"
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="size-4" aria-hidden="true" />
+                Add location
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingLocation ? "Edit location" : "Add location"}
+                </DialogTitle>
+                <DialogDescription>
+                  Locations describe where an item is physically stored.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -173,7 +192,9 @@ export default function LocationsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="Location name (e.g., Warehouse A, Shelf 1)"
+                    placeholder="e.g. Warehouse A, Shelf 1"
+                    autoComplete="off"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -185,81 +206,111 @@ export default function LocationsPage() {
                       setFormData({ ...formData, description: e.target.value })
                     }
                     placeholder="Additional details about this location"
-                    rows={3}
+                    rows={DESCRIPTION_ROWS}
                   />
                 </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseDialog}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? "Saving..."
-                    : editingLocation
-                    ? "Update"
-                    : "Create"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDialog}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && (
+                      <Loader2
+                        className="size-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {isSubmitting
+                      ? "Saving…"
+                      : editingLocation
+                        ? "Update"
+                        : "Create"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            All Locations
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="size-4" aria-hidden="true" />
+            All locations
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
+            <TableSkeleton columns={LOCATION_TABLE_COLUMNS} />
           ) : locations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <p>No locations yet</p>
-              <p className="text-sm">Create your first location to get started</p>
-            </div>
+            <EmptyState
+              icon={MapPin}
+              title="No locations yet"
+              description="Locations let you record where each item is stored, from a room to a single shelf."
+              action={
+                <Button size="sm" onClick={() => handleOpenDialog()}>
+                  <Plus className="size-4" aria-hidden="true" />
+                  Add your first location
+                </Button>
+              }
+            />
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/40">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="px-6">Name</TableHead>
+                  <TableHead className="px-6">Description</TableHead>
+                  <TableHead className="px-6 text-right">Items</TableHead>
+                  <TableHead className="w-24 px-6">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {locations.map((location) => (
                   <TableRow key={location.id}>
-                    <TableCell className="font-medium">{location.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {location.description || "-"}
+                    <TableCell className="px-6 py-3 font-medium">
+                      {location.name}
                     </TableCell>
-                    <TableCell>{location._count.items}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                    <TableCell className="text-muted-foreground max-w-xs px-6 py-3 whitespace-normal">
+                      {location.description || EMPTY_VALUE}
+                    </TableCell>
+                    <TableCell className="px-6 py-3 text-right tabular-nums">
+                      {formatNumber(location._count.items)}
+                    </TableCell>
+                    <TableCell className="px-6 py-3">
+                      <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon-sm"
+                          aria-label={`Edit ${location.name}`}
                           onClick={() => handleOpenDialog(location)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="size-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(location.id, location.name)}
+                          size="icon-sm"
+                          aria-label={`Delete ${location.name}`}
+                          disabled={deletingId === location.id}
+                          className="text-destructive hover:text-destructive"
+                          onClick={() =>
+                            handleDelete(location.id, location.name)
+                          }
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          {deletingId === location.id ? (
+                            <Loader2
+                              className="size-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
@@ -270,6 +321,6 @@ export default function LocationsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

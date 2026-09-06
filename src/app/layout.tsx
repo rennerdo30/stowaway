@@ -1,6 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import {
+  APP_DESCRIPTION,
+  APP_NAME,
+  THEME_COLOR_DARK,
+  THEME_COLOR_LIGHT,
+} from "@/lib/constants";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,8 +15,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Stowaway",
-  description: "Modern inventory management system - stow away your items safely",
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: APP_DESCRIPTION,
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -22,6 +31,14 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+};
+
+/** Tints the mobile browser chrome to match the active theme. */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR_LIGHT },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR_DARK },
+  ],
 };
 
 export default function RootLayout({
